@@ -1,0 +1,46 @@
+/**
+ * @author    debuss-a <alexandre@common-services.com>
+ * @copyright Copyright (c) 2018 Common-Services
+ * @license   CC BY-SA 4.0
+ */
+
+/* NavBar */
+
+#conf-nav li {
+    display: inline-block !important;
+    max-width: 210px;
+    min-width: 160px;
+    border-bottom: 3px solid transparent;
+    margin-right: 20px;
+    height: 60px;
+    font-size: 0.8rem;
+}
+
+#conf-nav > li:not(.active) > a {
+    background-color: white;
+    border: solid 1px #d3d8db;
+}
+
+/* Configuration */
+
+#module_form .panel-heading {
+    font-weight: bold !important;
+}
+
+#module_form label {
+    font-weight: bold;
+}
+
+div.panel[id^="fieldset_"] + div.panel[id^="fieldset_"] {
+    display: none;
+}
+
+.bootstrap select[multiple] {
+    height: 200px;
+}
+
+@media all and (min-width: 1200px) {
+    #status_mapping div.status-margin-fix {
+        margin-left: -35%;
+    }
+}
