@@ -210,7 +210,7 @@ class LaPosteSuiviConfigurationHandler implements LaPosteSuiviConstantInterface
 
         // Carriers
         $carrier_options = array();
-        foreach (Carrier::getCarriers(Context::getContext()->language->id, true) as $carrier) {
+        foreach (Carrier::getCarriers(Context::getContext()->language->id, true, false, false, null, Carrier::ALL_CARRIERS) as $carrier) {
             $carrier_options[] = array(
                 'id_reference' => $carrier['id_reference'],
                 'name' => $carrier['name']
