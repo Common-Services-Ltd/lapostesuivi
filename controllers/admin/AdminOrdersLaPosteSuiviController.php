@@ -30,6 +30,25 @@ class AdminOrdersLaPosteSuiviController extends ModuleAdminController
     protected $context;
 
     /**
+     * @var array
+     * @see ObjectModel::$definition
+     */
+    public static $definition = array(
+        'table' => 'lapostesuivi',
+        'primary' => 'id_lapostesuivi',
+        'fields' => array(
+            'code' => array('type' => ObjectModel::TYPE_STRING, 'size' => 32),
+            'type' => array('type' => ObjectModel::TYPE_STRING, 'size' => 32),
+            'status' => array('type' => ObjectModel::TYPE_STRING, 'size' => 16),
+            'message' => array('type' => ObjectModel::TYPE_STRING, 'size' => 256),
+            'link' => array('type' => ObjectModel::TYPE_STRING, 'size' => 256),
+            'date' => array('type' => ObjectModel::TYPE_DATE),
+            'date_add' => array('type' => ObjectModel::TYPE_DATE, 'validate' => 'isDate'),
+            'date_upd' => array('type' => ObjectModel::TYPE_DATE, 'validate' => 'isDate')
+        )
+    );
+
+    /**
      * AdminOrdersLaPosteSuiviController constructor.
      */
     public function __construct()

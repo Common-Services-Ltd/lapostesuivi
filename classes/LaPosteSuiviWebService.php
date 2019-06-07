@@ -151,10 +151,15 @@ class LaPosteSuiviWebService extends ObjectModel
             $codes = LaPosteSuiviWebService::getOrdersToTrack();
         }
 
-        $tracking = new self();
-        $tracking->code = (array)$codes;
+        $code_chunks = array_chunk($codes, 25, true);
 
-        return $tracking->call();
+        $tracking = new self();
+        foreach ($code_chunks as $chunk) {
+            $tracking->code = (array)$chunk;
+            $tracking->call();
+        }
+
+        return $tracking;
     }
 
     /**
@@ -166,7 +171,7 @@ class LaPosteSuiviWebService extends ObjectModel
             $this->response = array_combine(array_keys($this->code), $this->response);
         }
 
-        return $this->response;
+        return (array)$this->response;
     }
 
     /**

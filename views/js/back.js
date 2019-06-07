@@ -12,6 +12,10 @@ $(document).ready(function () {
         }
 
         for (var i in keys) {
+            if (!keys.hasOwnProperty(i)) {
+                continue;
+            }
+
             var ind = keys[i];
 
             if (typeof(response[ind]) === 'undefined' || response[ind] == null) {
@@ -117,9 +121,9 @@ $(document).ready(function () {
     });
 
     // Before submitting form :
-    //    * Select selected status
+    //    * Select selected status and carriers
     $('button[name="submitLaPosteSuiviModule"]').click(function () {
-        $('.selectedStatus').find('option').attr('selected', true);
+        $('.selectedStatus, .selectedSwap').find('option').attr('selected', true);
     });
 
 });
