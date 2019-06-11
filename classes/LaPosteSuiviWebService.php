@@ -155,8 +155,12 @@ class LaPosteSuiviWebService extends ObjectModel
 
         $tracking = new self();
         foreach ($code_chunks as $chunk) {
-            $tracking->code = (array)$chunk;
-            $tracking->call();
+            $temp_tracking = new self();
+            $temp_tracking->code = (array)$chunk;
+            $temp_tracking->call();
+
+            $tracking->code = (array)$tracking->code + $temp_tracking->code;
+            $tracking->response = array_merge((array)$tracking->response, $temp_tracking->response);
         }
 
         return $tracking;

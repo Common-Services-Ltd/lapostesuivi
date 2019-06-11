@@ -122,7 +122,7 @@ $(document).ready(function () {
 
     // Before submitting form :
     //    * Select selected status and carriers
-    $('button[name="submitLaPosteSuiviModule"]').click(function () {
+    $('#module_form').on('submit', function () {
         $('.selectedStatus, .selectedSwap').find('option').attr('selected', true);
     });
 
