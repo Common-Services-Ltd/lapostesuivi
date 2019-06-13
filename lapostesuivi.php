@@ -50,7 +50,7 @@ class LaPosteSuivi extends Module implements LaPosteSuiviConstantInterface
     {
         $this->name = 'lapostesuivi';
         $this->tab = 'shipping_logistics';
-        $this->version = '1.0.03';
+        $this->version = '1.0.04';
         $this->author = 'debuss-a';
         $this->need_instance = 0;
         $this->bootstrap = true;

@@ -217,9 +217,9 @@ class AdminOrdersLaPosteSuiviController extends ModuleAdminController
     /**
      * @see ControllerCore::setMedia()
      */
-    public function setMedia()
+    public function setMedia($isNewTheme = false)
     {
-        parent::setMedia();
+        parent::setMedia($isNewTheme);
 
         $this->addCSS($this->module->folder_path.'/views/css/controller.css');
     }
