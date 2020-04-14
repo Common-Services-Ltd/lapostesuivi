@@ -5,14 +5,10 @@
  * @license   CC BY-SA 4.0
  */
 
-if (isset($_SERVER['DropBox']) && $_SERVER['DropBox']) {
-    // Development environment
-    require_once readlink(dirname($_SERVER['SCRIPT_FILENAME']).'/../../../config/config.inc.php');
-    require_once readlink(_PS_MODULE_DIR_.'lapostesuivi/bootstrap/autoload.php');
-} else {
-    require_once dirname(__FILE__).'/../../../config/config.inc.php';
-    require_once _PS_MODULE_DIR_.'lapostesuivi/bootstrap/autoload.php';
-}
+$file = new SplFileInfo($_SERVER['SCRIPT_FILENAME']);
+
+require_once dirname(dirname(dirname($file->getPath()))).'/config/config.inc.php';
+require_once dirname(__FILE__).'/../bootstrap/autoload.php';
 
 echo 'Tracking started on : '.date('c').'<br>';
 echo '====================================<br><br><br>';
@@ -23,82 +19,76 @@ if (Tools::getValue('token') != Configuration::get('LPS_TOKEN')) {
 
 LaPosteSuiviTools::cleanOldEntryInDb();
 
-$selected_statuses = Tools::unSerialize(Configuration::get('LPS_SELECTED_STATUS'));
-if (!is_array($selected_statuses) || !count($selected_statuses)) {
+$id_order_state_shipped = (int)Configuration::get('LPS_SHIPPED_ORDER_STATE');
+$id_order_state_delivered = (int)Configuration::get('LPS_DELIVERED_ORDER_STATE');
+if (!$id_order_state_shipped || !$id_order_state_delivered) {
     die('Tracking Cancelled : Module configuration is not complete, statuses need to be set.');
 }
 
-try {
-    foreach (LaPosteSuiviWebService::callMultiple()->getResponse() as $id_order => $response) {
-        if (!is_array($response) || !count($response)) {
-            echo '<span style="color: orange;">';
-            echo '> No orders to track...';
-            echo '</span><br><br><br>';
-            continue;
-        }
+$employee = new Employee((int)Configuration::get('LPS_EMPLOYEE_ID'));
+if (!Validate::isLoadedObject($employee)) {
+    // If invalid employee then fetch any active employee
+    $employee = new Employee((int)Db::getInstance()->getValue(
+        'SELECT `id_employee`
+            FROM `'._DB_PREFIX_.'employee`
+            WHERE `active` = 1
+            ORDER BY `id_employee`'
+    ));
+}
 
+try {
+    foreach (LaPosteSuiviWebService::callMultipleV2() as $id_order => $response) {
         echo '> Treating Order #'.$id_order.'<br>';
 
-        if (array_key_exists('error', $response)) {
+        if ($response->getReturnCode() == 400) {
             echo '<span style="color: red;">';
             echo sprintf(
                 '> %s : %s',
-                $response['error']['code'],
-                $response['error']['message']
+                400,
+                $response->getReturnMessage()
             );
             echo '</span><br><br><br>';
             continue;
-        } elseif (!array_key_exists('data', $response)) {
-            echo '> ERROR : Empty response from web service, tracking is therefore skipped.';
+        } elseif (!count($response->getShipment()->getEvent())) {
+            echo '> ERROR : Empty events in response from web service, tracking is therefore skipped.';
             echo '</span><br><br><br>';
             continue;
         }
 
-        $response = $response['data'];
-        $shipping_number = $response['code'];
+        $event = $response->getShipment()->getEvent()[0];
+        $shipping_number = $response->getIdShip();
 
         echo '> Shipping Number : '.$shipping_number.'<br>';
 
         echo '<span style="color: green;">> SUCCESS !<br>';
-        echo '=> On : '.$response['date'].'<br>';
-        echo '=> Status : '.$response['status'].'<br>';
-        echo '=> Message : '.$response['message'].'</span><br>';
+        echo '=> On : '.$event->getDate()->format('d/m/Y').'<br>';
+        echo '=> Status : '.$event->getCode().'<br>';
+        echo '=> Message : '.$event->getLabel().'</span><br>';
 
         $tracking = LaPosteSuiviWebService::getInstanceFromTrackingNumber($shipping_number);
 
-        foreach ($response as $key => $val) {
-            $tracking->{$key} = $val;
-        }
+        $tracking->code = $shipping_number;
         $tracking->type = 'Colis';
-
+        $tracking->status = $event->getCode();
+        $tracking->message = $event->getLabel();
+        $tracking->link = $response->getShipment()->getUrlDetail();
+        $tracking->date = $event->getDate()->format('Y-m-d');
         $tracking->save();
 
-        foreach ($selected_statuses as $id_order_state => $status) {
-            if (in_array($tracking->status, $status)) {
-                $order = new LaPosteSuiviOrder($id_order);
-                $employee = new Employee((int)Configuration::get('LPS_EMPLOYEE_ID'));
-
-                if (!Validate::isLoadedObject($employee)) {
-                    // If invalid employee then fetch any active employee
-                    $employee = new Employee((int)Db::getInstance()->getValue(
-                        'SELECT `id_employee`
-                        FROM `'._DB_PREFIX_.'employee`
-                        WHERE `active` = 1
-                        ORDER BY `id_employee`'
-                    ));
-                }
-
-                if (!Validate::isLoadedObject($order)) {
-                    echo '> Unable to load order, therefore order status cannot be changed.<br>';
-                } elseif ($order->current_state == $id_order_state) {
-                    echo '> Order has already the correct status, nothing to do.<br>';
-                } elseif (!$order->setCurrentState($id_order_state, $employee->id)) {
-                    echo '<span style="color: red;">> ERROR : Unable to change order status...</span><br>';
-                } else {
-                    echo '<span style="color: green;">> SUCCESS : order status has been changed.</span><br>';
-                }
-
-                break;
+        $order = new LaPosteSuiviOrder($id_order);
+        if (!Validate::isLoadedObject($order)) {
+            echo '> Unable to load order, therefore order status cannot be changed.<br>';
+        } elseif ($response->isDelivered() && $order->current_state != $id_order_state_delivered) {
+            if (!$order->setCurrentState($id_order_state_delivered, $employee->id)) {
+                echo '<span style="color: red;">> ERROR : Unable to change order status to DELIVERED...</span><br>';
+            } else {
+                echo '<span style="color: green;">> SUCCESS : order status has been changed to DELIVERED.</span><br>';
+            }
+        } elseif ($order->current_state != $id_order_state_shipped) {
+            if (!$order->setCurrentState($id_order_state_shipped, $employee->id)) {
+                echo '<span style="color: red;">> ERROR : Unable to change order status to SHIPPED...</span><br>';
+            } else {
+                echo '<span style="color: green;">> SUCCESS : order status has been changed to SHIPPED.</span><br>';
             }
         }
 

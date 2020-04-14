@@ -5,12 +5,10 @@
  * @license   CC BY-SA 4.0
  */
 
-if (isset($_SERVER['DropBox']) && $_SERVER['DropBox']) {
-    // Development environment
-    require_once readlink(dirname($_SERVER['SCRIPT_FILENAME']).'/../../../config/config.inc.php');
-} else {
-    require_once dirname(__FILE__).'/../../../config/config.inc.php';
-}
+$file = new SplFileInfo($_SERVER['SCRIPT_FILENAME']);
+
+require_once dirname(dirname(dirname($file->getPath()))).'/config/config.inc.php';
+require_once dirname(__FILE__).'/../bootstrap/autoload.php';
 
 ob_start();
 

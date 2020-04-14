@@ -65,61 +65,20 @@ class LaPosteSuiviConfigurationHandler implements LaPosteSuiviConstantInterface
             'id_language' => Context::getContext()->language->id
         );
 
-        // Smarty variables
-        // For "html" type fields
-        // ===============
-
         // Cronjobs
         $shop_url = Tools::getCurrentUrlProtocolPrefix().
             htmlspecialchars($_SERVER['HTTP_HOST'], ENT_COMPAT, 'UTF-8').__PS_BASE_URI__;
+        $shop_url = trim($shop_url, '/');
         $token = Configuration::get('LPS_TOKEN');
-
-        // Status
-        $selected_status_list = $this->selectedStatusList();
-        $available_status_list = $this->module->status_code;
-
-        foreach ($selected_status_list as $list) {
-            $available_status_list = array_diff($available_status_list, $list);
-        }
 
         Context::getContext()->smarty->assign(array(
             'cron_url' => $shop_url.'/modules/lapostesuivi/functions/tracking.php?token='.$token,
             'cronjobs_url' => $shop_url.'/modules/lapostesuivi/functions/cronjobs.php?token='.$token,
             'cronjobs_is_installed' => Module::isInstalled('cronjobs') &&
                 Module::isEnabled('cronjobs'),
-            'status_list' => LaPosteSuiviOrderState::getOrderStatesShipped(Context::getContext()->language->id),
-            'laposte_status_list' => $available_status_list,
-            'selected_status_list' => $selected_status_list,
         ));
 
         return $helper->generateForm($this->getConfigForm());
-    }
-
-    /**
-     * Return a list of selected status per OrderState id.
-     *
-     * @return array
-     */
-    protected function selectedStatusList()
-    {
-        $selected_status = unserialize(Configuration::get('LPS_SELECTED_STATUS'));
-        $selected_status_list = array();
-
-        if (!is_array($selected_status) || !count($selected_status)) {
-            return $selected_status_list;
-        }
-
-        foreach ($selected_status as $id_order_state => $status) {
-            $descriptions = array();
-
-            foreach ($status as $state) {
-                $descriptions[] = $this->module->status_code[$state];
-            }
-
-            $selected_status_list[$id_order_state] = array_flip(array_combine($descriptions, $status));
-        }
-
-        return $selected_status_list;
     }
 
     /**
@@ -144,6 +103,8 @@ class LaPosteSuiviConfigurationHandler implements LaPosteSuiviConstantInterface
             'LPS_SELECTED_STATUS' => Configuration::get('LPS_SELECTED_STATUS'),
             'LPS_EMPLOYEE_ID' => Configuration::get('LPS_EMPLOYEE_ID'),
             'LPS_DEBUG' => Configuration::get('LPS_DEBUG'),
+            'LPS_SHIPPED_ORDER_STATE' => Configuration::get('LPS_SHIPPED_ORDER_STATE'),
+            'LPS_DELIVERED_ORDER_STATE' => Configuration::get('LPS_DELIVERED_ORDER_STATE'),
             'selected_tab' => Tools::getValue('selected_tab', 'nav-authentication'),
             'carriers' => $selected_carriers
         );
@@ -251,12 +212,18 @@ class LaPosteSuiviConfigurationHandler implements LaPosteSuiviConstantInterface
             ),
             'input' => array(
                 array(
-                    'type' => 'html',
-                    'label' => ' ',
-                    'name' => null,
-                    'html_content' => Context::getContext()->smarty->fetch(
-                        $this->local_path.'views/templates/admin/helpers/status.tpl'
-                    )
+                    'type' => 'select',
+                    'name' => 'LPS_SHIPPED_ORDER_STATE',
+                    'label' => $this->l('Shipped order state'),
+                    'options' => $this->getOrderStateOptions(),
+                    'desc' => $this->l('Select the order state to set on your orders when they are shipped.')
+                ),
+                array(
+                    'type' => 'select',
+                    'name' => 'LPS_DELIVERED_ORDER_STATE',
+                    'label' => $this->l('Delivered order state'),
+                    'options' => $this->getOrderStateOptions(),
+                    'desc' => $this->l('Select the order state to set on your orders when they are delivered.')
                 )
             ),
             'submit' => array(
@@ -347,6 +314,27 @@ class LaPosteSuiviConfigurationHandler implements LaPosteSuiviConstantInterface
         }
 
         return $options;
+    }
+
+    /**
+     * @return array
+     */
+    protected function getOrderStateOptions()
+    {
+        $options = array();
+
+        foreach (LaPosteSuiviOrderState::getOrderStatesShipped(Context::getContext()->language->id) as $order_state) {
+            $options[] = array(
+                'value' => $order_state['id_order_state'],
+                'name' => $order_state['name']
+            );
+        }
+
+        return array(
+            'query' => $options,
+            'id' => 'value',
+            'name' => 'name'
+        );
     }
 
     /**

@@ -16,7 +16,15 @@ class LaPosteSuiviWebService extends ObjectModel
 {
 
     const ENDPOINT = 'https://api.laposte.fr';
+
     const USER_AGENT = 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.1) Gecko/20061204 Firefox/2.0.0.1';
+
+    const LANG_FR = 'fr_FR';
+    const LANG_DE = 'de_DE';
+    const LANG_EN = 'en_GB';
+    const LANG_ES = 'es_ES';
+    const LANG_IT = 'it_IT';
+    const LANG_NL = 'nl_NL';
 
     public $id_lapostesuivi;
     public $code;
@@ -85,6 +93,116 @@ class LaPosteSuiviWebService extends ObjectModel
 
         return $tracking;
     }
+
+    /* -----------------------------------------------------------------------------------------------------------------
+     | API V2
+     ---------------------------------------------------------------------------------------------------------------- */
+
+    /**
+     * @param Request $request
+     * @return Response
+     * @throws InvalidArgumentException
+     * @throws PrestaShopDatabaseException
+     * @throws Exception
+     */
+    public function callV2($request)
+    {
+        return reset($this->callMultipleV2([$request]));
+    }
+
+    /**
+     * @param Request[]|null $requests
+     * @return Response[]
+     * @throws InvalidArgumentException
+     * @throws PrestaShopDatabaseException
+     * @throws Exception
+     */
+    public static function callMultipleV2($requests = null)
+    {
+        $x_okapi_key = Configuration::get('LPS_X_OKAPI_KEY');
+        if (!$x_okapi_key) {
+            throw new Exception('Missing X-Okapi-Key.');
+        } elseif (Tools::strlen($x_okapi_key) !== 64) {
+            throw new Exception('Wrong X-Okapi-Key, it is supposed to be 64 characters long.');
+        }
+
+        if (!$requests || !is_array($requests)) {
+            $requests = array(
+                1 => new Request('6W111111111XX')
+            );
+
+            foreach (LaPosteSuiviWebService::getOrdersToTrack() as $id_order => $tracking) {
+                $requests[$id_order] = new Request($tracking);
+            }
+        }
+
+        $multi_curl = array();
+        $results = array();
+
+        $curl = curl_multi_init();
+
+        foreach ($requests as $id => $request) {
+            $multi_curl[$id] = curl_init();
+
+            curl_setopt($multi_curl[$id], CURLOPT_USERAGENT, self::USER_AGENT);
+            curl_setopt($multi_curl[$id], CURLOPT_RETURNTRANSFER, 1);
+            curl_setopt($multi_curl[$id], CURLOPT_SSL_VERIFYHOST, 0);
+            curl_setopt($multi_curl[$id], CURLOPT_SSL_VERIFYPEER, 0);
+            curl_setopt($multi_curl[$id], CURLOPT_URL, sprintf(
+                '%s/suivi/v2/idships/%s?lang=%s',
+                self::ENDPOINT,
+                $request->getId(),
+                $request->getLang()
+            ));
+            curl_setopt($multi_curl[$id], CURLOPT_HTTPHEADER, array(
+                'X-Okapi-Key: '.$x_okapi_key,
+                'Accept: application/json',
+                'X-Forwarded-For: '.$request->getIpAddress()
+            ));
+
+            curl_multi_add_handle($curl, $multi_curl[$id]);
+        }
+
+        $index = null;
+        do {
+            curl_multi_exec($curl, $index);
+        } while ($index > 0);
+
+        foreach ($multi_curl as $key => $ch) {
+            $results[$key] = curl_multi_getcontent($ch);
+
+            curl_multi_remove_handle($curl, $ch);
+        }
+
+        curl_multi_close($curl);
+
+        $responses = array();
+
+        foreach ($results as $id_order => $result) {
+            $result = json_decode($result, true);
+            if ($result === null) {
+                throw new Exception('Unable to json_decode response from the API.');
+            }
+
+            $response = new Response();
+
+            foreach ($result as $parameter => $value) {
+                $response->{'set'.ucfirst($parameter)}($value);
+            }
+
+            if (!$response->getIdShip()) {
+                $response->setIdShip($response->getShipment()->getIdShip());
+            }
+
+            $responses[$id_order] = $response;
+        }
+
+        return $responses;
+    }
+
+    /* -----------------------------------------------------------------------------------------------------------------
+     | API V1
+     ---------------------------------------------------------------------------------------------------------------- */
 
     /**
      * @return string Web service URI according to product and version
@@ -237,21 +355,9 @@ class LaPosteSuiviWebService extends ObjectModel
 
         return array_combine(
             LaPosteSuiviTools::arrayColumn($orders_ids, 'id_order'),
-            LaPosteSuiviTools::arrayColumn($orders_ids, 'shipping_number')
-        );
-    }
-
-    /**
-     * La Poste API contains date in french format, use this function to turn it to "semi-SQL" format.
-     */
-    protected function frenchDateToSQLFormat()
-    {
-        $this->date = explode('/', $this->date);
-        $this->date = sprintf(
-            '%s-%s-%s',
-            $this->date[2],
-            $this->date[1],
-            $this->date[0]
+            array_map(function ($number) {
+                return str_replace(' ', '', $number);
+            }, LaPosteSuiviTools::arrayColumn($orders_ids, 'shipping_number'))
         );
     }
 
@@ -280,7 +386,6 @@ class LaPosteSuiviWebService extends ObjectModel
      */
     public function add($auto_date = true, $null_values = false)
     {
-        $this->frenchDateToSQLFormat();
         $this->fixTrackingLink();
 
         return parent::add($auto_date, $null_values);
@@ -295,7 +400,6 @@ class LaPosteSuiviWebService extends ObjectModel
      */
     public function update($null_values = false)
     {
-        $this->frenchDateToSQLFormat();
         $this->fixTrackingLink();
 
         return parent::update($null_values);

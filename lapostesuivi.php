@@ -34,7 +34,7 @@ class LaPosteSuivi extends Module implements LaPosteSuiviConstantInterface
         'DESTINATAIRE_INFORME' => null,
         'RETOUR_DESTINATAIRE' => null,
         'ERREUR' => null,
-        'INCONNU' => null,
+        'INCONNU' => null
     );
 
     /** @var LaPosteSuiviHooksHandler */
@@ -50,7 +50,7 @@ class LaPosteSuivi extends Module implements LaPosteSuiviConstantInterface
     {
         $this->name = 'lapostesuivi';
         $this->tab = 'shipping_logistics';
-        $this->version = '1.0.04';
+        $this->version = '2.0.00';
         $this->author = 'debuss-a';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -121,6 +121,8 @@ class LaPosteSuivi extends Module implements LaPosteSuiviConstantInterface
             Configuration::deleteByName('LPS_SELECTED_CARRIERS') &&
             Configuration::deleteByName('LPS_TRACKING_DEADLINE') &&
             Configuration::deleteByName('LPS_SELECTED_STATUS') &&
+            Configuration::deleteByName('LPS_DELIVERED_ORDER_STATE') &&
+            Configuration::deleteByName('LPS_SHIPPED_ORDER_STATE') &&
             Configuration::deleteByName('LPS_EMPLOYEE_ID') &&
             Configuration::deleteByName('LPS_DEBUG');
     }
@@ -180,9 +182,10 @@ class LaPosteSuivi extends Module implements LaPosteSuiviConstantInterface
             serialize(Tools::getValue('carriers_selected'))
         );
         $success &= Configuration::updateValue('LPS_TRACKING_DEADLINE', Tools::getValue('LPS_TRACKING_DEADLINE'));
-        $success &= Configuration::updateValue('LPS_SELECTED_STATUS', serialize(Tools::getValue('selected_status')));
         $success &= Configuration::updateValue('LPS_EMPLOYEE_ID', Tools::getValue('LPS_EMPLOYEE_ID'));
         $success &= Configuration::updateValue('LPS_DEBUG', Tools::getValue('LPS_DEBUG'));
+        $success &= Configuration::updateValue('LPS_SHIPPED_ORDER_STATE', Tools::getValue('LPS_SHIPPED_ORDER_STATE'));
+        $success &= Configuration::updateValue('LPS_DELIVERED_ORDER_STATE', Tools::getValue('LPS_DELIVERED_ORDER_STATE'));
 
         if ($success) {
             return $this->displayConfirmation($this->l('Settings updated'));
