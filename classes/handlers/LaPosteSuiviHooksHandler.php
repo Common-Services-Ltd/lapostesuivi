@@ -189,7 +189,23 @@ class LaPosteSuiviHooksHandler implements LaPosteSuiviConstantInterface
             }
 
             if (Validate::isLoadedObject($tracking)) {
+                if (!in_array($tracking->status, array_keys($this->module->status_code))) {
+                    foreach ($this->module->status_to_event_codes as $status => $codes) {
+                        if (in_array($tracking->status, $codes)) {
+                            $tracking->status = $status;
+                            break;
+                        }
+                    }
+                }
+
                 $tracking->status = $this->module->status_code[$tracking->status];
+
+                if (!strlen($tracking->link)) {
+                    $tracking->link = sprintf(
+                        'https://www.laposte.fr/particulier/outils/suivre-vos-envois?code=%s',
+                        $tracking_number
+                    );
+                }
             }
         } else {
             $tracking = new LaPosteSuiviWebService();

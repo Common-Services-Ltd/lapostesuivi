@@ -37,6 +37,21 @@ class LaPosteSuivi extends Module implements LaPosteSuiviConstantInterface
         'INCONNU' => null
     );
 
+    /** @var array Matching between v2 event codes and v1 status */
+    public $status_to_event_codes = [
+        'PRIS_EN_CHARGE' => ['DR1', 'PC1', 'PC2'],
+        'EN_LIVRAISON' => ['ET1', 'ET2', 'ET3', 'ET4', 'EP1'],
+        'EXPEDIE' => ['DO1', 'DO2', 'DO3'],
+        'A_RETIRER' => ['AG1'],
+        'TRI_EFFECTUE' => [],
+        'DISTRIBUE' => ['MD2'],
+        'LIVRE' => ['DI1', 'DI2'],
+        'DESTINATAIRE_INFORME' => [],
+        'RETOUR_DESTINATAIRE' => ['RE1'],
+        'ERREUR' => ['PB1', 'ND1'],
+        'INCONNU' => []
+    ];
+
     /** @var LaPosteSuiviHooksHandler */
     protected $hooks_handler;
 
@@ -50,7 +65,7 @@ class LaPosteSuivi extends Module implements LaPosteSuiviConstantInterface
     {
         $this->name = 'lapostesuivi';
         $this->tab = 'shipping_logistics';
-        $this->version = '2.0.00';
+        $this->version = '2.0.1';
         $this->author = 'debuss-a';
         $this->need_instance = 0;
         $this->bootstrap = true;

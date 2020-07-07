@@ -127,9 +127,7 @@ class LaPosteSuiviWebService extends ObjectModel
         }
 
         if (!$requests || !is_array($requests)) {
-            $requests = array(
-                1 => new Request('6W111111111XX')
-            );
+            $requests = array();
 
             foreach (LaPosteSuiviWebService::getOrdersToTrack() as $id_order => $tracking) {
                 $requests[$id_order] = new Request($tracking);
