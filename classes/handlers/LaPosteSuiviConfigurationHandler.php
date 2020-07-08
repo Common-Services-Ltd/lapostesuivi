@@ -97,6 +97,17 @@ class LaPosteSuiviConfigurationHandler implements LaPosteSuiviConstantInterface
             }
         }
 
+        // Status
+        $status = OrderState::getOrderStates(Context::getContext()->language->id);
+        $selected_status_id = (array)Tools::unSerialize(Configuration::get('PLS_SELECTED_STATUS'));
+        $selected_status = array();
+
+        foreach ($status as $state) {
+            if (array_search($state['id_order_state'], $selected_status_id) !== false) {
+                $selected_status[] = $state['id_order_state'];
+            }
+        }
+
         return array(
             'LPS_X_OKAPI_KEY' => Configuration::get('LPS_X_OKAPI_KEY'),
             'LPS_TRACKING_DEADLINE' => Configuration::get('LPS_TRACKING_DEADLINE'),
@@ -106,7 +117,8 @@ class LaPosteSuiviConfigurationHandler implements LaPosteSuiviConstantInterface
             'LPS_SHIPPED_ORDER_STATE' => Configuration::get('LPS_SHIPPED_ORDER_STATE'),
             'LPS_DELIVERED_ORDER_STATE' => Configuration::get('LPS_DELIVERED_ORDER_STATE'),
             'selected_tab' => Tools::getValue('selected_tab', 'nav-authentication'),
-            'carriers' => $selected_carriers
+            'carriers' => $selected_carriers,
+            'status' => $selected_status
         );
     }
 
@@ -205,6 +217,14 @@ class LaPosteSuiviConfigurationHandler implements LaPosteSuiviConstantInterface
         );
 
         // Status
+        $status_options = array();
+        foreach (OrderState::getOrderStates(Context::getContext()->language->id) as $state) {
+            $status_options[] = array(
+                'id_order_state' => $state['id_order_state'],
+                'name' => $state['name']
+            );
+        }
+
         $fields_form[2]['form'] = array(
             'legend' => array(
                 'title' => $this->l('Status'),
@@ -224,6 +244,20 @@ class LaPosteSuiviConfigurationHandler implements LaPosteSuiviConstantInterface
                     'label' => $this->l('Delivered order state'),
                     'options' => $this->getOrderStateOptions(),
                     'desc' => $this->l('Select the order state to set on your orders when they are delivered.')
+                ),
+                array(
+                    'type' => 'swap',
+                    'label' => $this->l('Order State that should not be tracked'),
+                    'name' => 'status',
+                    'options' => array(
+                        'query' => $status_options,
+                        'id' => 'id_order_state',
+                        'name' => 'name'
+                    ),
+                    'desc' => array(
+                        $this->l('Please select order state that can not be tracked by La Poste.'),
+                        $this->l('Usually this will be your order state "Delivered", "Refund" or "Cancelled".')
+                    )
                 )
             ),
             'submit' => array(

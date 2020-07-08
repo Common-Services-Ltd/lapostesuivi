@@ -65,7 +65,7 @@ class LaPosteSuivi extends Module implements LaPosteSuiviConstantInterface
     {
         $this->name = 'lapostesuivi';
         $this->tab = 'shipping_logistics';
-        $this->version = '2.0.1';
+        $this->version = '2.1.0';
         $this->author = 'debuss-a';
         $this->need_instance = 0;
         $this->bootstrap = true;
@@ -195,6 +195,10 @@ class LaPosteSuivi extends Module implements LaPosteSuiviConstantInterface
         $success &= Configuration::updateValue(
             'LPS_SELECTED_CARRIERS',
             serialize(Tools::getValue('carriers_selected'))
+        );
+        $success &= Configuration::updateValue(
+            'PLS_SELECTED_STATUS',
+            serialize(Tools::getValue('status_selected'))
         );
         $success &= Configuration::updateValue('LPS_TRACKING_DEADLINE', Tools::getValue('LPS_TRACKING_DEADLINE'));
         $success &= Configuration::updateValue('LPS_EMPLOYEE_ID', Tools::getValue('LPS_EMPLOYEE_ID'));
