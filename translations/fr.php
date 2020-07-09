@@ -64,9 +64,9 @@ $_MODULE['<{lapostesuivi}prestashop>lapostesuiviconfigurationhandler_9abb149c95d
 $_MODULE['<{lapostesuivi}prestashop>lapostesuiviconfigurationhandler_b8c1fa1d613ce2f103feccdb04b9ea1f'] = 'Sélectionnez le statut de commande à utiliser sur vos commandes quand elles sont envoyées.';
 $_MODULE['<{lapostesuivi}prestashop>lapostesuiviconfigurationhandler_e48575c1e1cfdc98e0ffdf3f86a8ad7a'] = 'Statut de commande Livré';
 $_MODULE['<{lapostesuivi}prestashop>lapostesuiviconfigurationhandler_258374002d2d1f92966165a0e139ffc1'] = 'Sélectionnez le statut de commande à utiliser sur vos commandes quand elles sont livrées.';
-$_MODULE['<{lapostesuivi}prestashop>lapostesuiviconfigurationhandler_1727b7ca65d28c7839f46bd7aa618997'] = 'Status de commande à ne pas suivre';
+$_MODULE['<{lapostesuivi}prestashop>lapostesuiviconfigurationhandler_1727b7ca65d28c7839f46bd7aa618997'] = 'Statuts de commande à ne pas suivre';
 $_MODULE['<{lapostesuivi}prestashop>lapostesuiviconfigurationhandler_7252237366b8a9b459998c96e8ce1b81'] = 'Sélectionnez les statuts de commande qui ne seront pas suivis par La Poste.';
-$_MODULE['<{lapostesuivi}prestashop>lapostesuiviconfigurationhandler_8318633876e1ab8892df892ef166287e'] = 'Habituellement, cela sera vos status \"Livré\", \"Annulé\" ou \"Remboursé\".';
+$_MODULE['<{lapostesuivi}prestashop>lapostesuiviconfigurationhandler_8318633876e1ab8892df892ef166287e'] = 'Habituellement, cela sera vos statuts \"Livré\", \"Annulé\" ou \"Remboursé\".';
 $_MODULE['<{lapostesuivi}prestashop>lapostesuiviconfigurationhandler_f4f70727dc34561dfde1a3c529b6205c'] = 'Paramètres';
 $_MODULE['<{lapostesuivi}prestashop>lapostesuiviconfigurationhandler_fd6fdef8ad1e2250383337412ac2ab0d'] = 'Suivre les commandes jusqu\'à';
 $_MODULE['<{lapostesuivi}prestashop>lapostesuiviconfigurationhandler_36198bde7cb2052fa9804d23ea5676e5'] = 'Spécifiez jusqu\'à quand le module doit récupérer les commandes à suivre.';
